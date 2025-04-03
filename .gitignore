@@ -1,0 +1,37 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environment
+venv/
+env/
+
+# Environment variables
+.env
+
+# Logs
+logs/
+*.log
+
+# Database files
+dump.rdb
+
+# Alembic migrations
+alembic/versions/
+
+# Testing and coverage reports
+.coverage
+htmlcov/
+*.cover
+.tox/
+nosetests.xml
+pytest_cache/
+junit.xml
+
+# VSCode settings
+.vscode/
+
+# System files
+.DS_Store
+Thumbs.db

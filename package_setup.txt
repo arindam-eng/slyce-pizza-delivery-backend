@@ -1,0 +1,14 @@
+fastapi>=0.103.0
+uvicorn>=0.23.2
+sqlalchemy>=2.0.20
+alembic>=1.11.3
+pydantic>=2.3.0
+pydantic-settings>=2.0.3
+python-dotenv>=1.0.0
+python-jose[cryptography]>=3.3.0
+passlib[bcrypt]>=1.7.4
+twilio>=8.5.0
+redis>=4.6.0
+websockets>=11.0.3
+python-multipart>=0.0.6
+asyncpg>=0.28.0  # For PostgreSQL async support
