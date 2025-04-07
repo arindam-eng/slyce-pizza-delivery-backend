@@ -28,14 +28,15 @@ async def verify_otp_route(mobile: str = Body(...), otp: str = Body(...)):
     if not is_valid:
         raise HTTPException(status_code=400, detail="Invalid OTP")
     
-    # Create or get user
+    # Create or get user14546---------
     user = await create_user(mobile)
     
     # Generate tokens
-    access_token = await create_access_token({"sub": str(user.id)})
-    refresh_token = await create_refresh_token({"sub": str(user.id)})
+    # Todo: checn the user role, replace 'admin' with the actual role => user.role
+    access_token = await create_access_token({"sub": str(user.id), "role": 'admin'})
+    refresh_token = await create_refresh_token({"sub": str(user.id), "role": 'admin'})
     
-    return TokenData(access_token=access_token, refresh_token=refresh_token)
+    return TokenData(access_token=access_token, refresh_token=refresh_token, user=user)
 
 @router.post("/refresh-otp")
 async def refresh_otp(request: OTPRequest):

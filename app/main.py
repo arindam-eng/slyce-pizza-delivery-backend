@@ -1,18 +1,23 @@
 from fastapi import FastAPI, WebSocket, HTTPException
-from fastapi.middleware.cors import CORSMiddleware
+# from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.cors import CORSMiddleware
+
 from starlette.requests import Request
 import uvicorn
 import asyncio
 from sqlalchemy.ext.asyncio import AsyncEngine
 from starlette.responses import JSONResponse, Response
+from fastapi.exceptions import RequestValidationError
 
 from app.api import auth 
 from app.api import menu
+from fastapi.encoders import jsonable_encoder
 #  users, menu, orders, restaurants, delivery, admin
 from app.database import Base, engine
 
 from app.services.websocket_service import start_redis_subscriber
 from app.api.middleware.response_middleware import ResponseMiddleware
+from app.services.websocket_service import handle_websocket_connection
 
 
 
@@ -29,10 +34,29 @@ app = FastAPI(
     version="1.0.0",
 )
 
-# Configure CORS
+@app.middleware("http")
+async def log_request(request: Request, call_next):
+    print("Incoming:", request.method, request.url)
+    response = await call_next(request)
+    return response
+
+
+origins = [
+    "http://localhost:3000",  # Next.js frontend
+    "http://127.0.0.1:3000",
+    "http://localhost:4000",  # FastAPI backend
+    "http://127.0.0.1:4000",
+]
+
+
+
+
+# Add middleware
+app.add_middleware(ResponseMiddleware)
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # In production, replace with specific origins
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -41,16 +65,12 @@ app.add_middleware(
 # Include routers
 app.include_router(auth.router)
 app.include_router(menu.router)
-# app.include_router(users.router, prefix="/users", tags=["Users"])
-# app.include_router(menu.router, prefix="/menu", tags=["Menu"])
-# app.include_router(orders.router, prefix="/orders", tags=["Orders"])
-# app.include_router(restaurants.router, prefix="/restaurants", tags=["Restaurants"])
-# app.include_router(delivery.router, prefix="/delivery", tags=["Delivery"])
-# app.include_router(admin.router, prefix="/admin", tags=["Admin"])
+
+# test post route for send-otp
 
 
-# Add middleware
-app.add_middleware(ResponseMiddleware)
+
+
 
 # Global exception handler
 @app.exception_handler(HTTPException)
@@ -75,9 +95,12 @@ async def generic_exception_handler(request: Request, exc: Exception):
         }
     )
 
+
+
 @app.get("/", tags=["Root"])
-def read_root():
+async def read_root():
     return {"message": "Welcome to the Slyce - Pizza Delivery API"}
+
 
 @app.websocket("/ws/{user_id}")
 async def websocket_endpoint(websocket: WebSocket, user_id: str):
@@ -90,3 +113,5 @@ async def startup_event():
     await init_db()
 
 
+if __name__ == "__main__":
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)

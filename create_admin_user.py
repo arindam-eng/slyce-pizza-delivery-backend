@@ -21,7 +21,7 @@ class UserRole(str, enum.Enum):
     ADMIN = "admin"
     CUSTOMER = "customer"
     RESTAURANT = "restaurant"
-    DELIVERY = "delivery"
+    DELIVERY_AGENT = "delivery_agent"
 
 def upgrade():
     # Define table for direct operations
@@ -34,13 +34,14 @@ def upgrade():
         column('role', Enum(UserRole)),
         column('is_active', Boolean),
         column('is_verified', Boolean)
+        column('is_profile_complete', Boolean),
     )
     
     # Upsert admin user
     op.execute(
         """
         INSERT INTO users (mobile, name, email, role, is_active, is_verified)
-        VALUES ('1234567890', 'Admin User', 'admin@example.com', 'admin', TRUE, TRUE)
+        VALUES ('1234567890', 'Admin User', 'admin@example.com', 'admin', TRUE, TRUE, TRUE)
         ON CONFLICT (mobile) 
         DO UPDATE SET 
             name = EXCLUDED.name,
@@ -48,6 +49,7 @@ def upgrade():
             role = EXCLUDED.role,
             is_active = EXCLUDED.is_active,
             is_verified = EXCLUDED.is_verified
+            is_profile_complete = EXCLUDED.is_profile_complete
         """
     )
 

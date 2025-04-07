@@ -108,11 +108,16 @@ async def update_menu_availability( menu_id: int, is_active: bool):
         db.refresh(item)
         return item
 
-async def get_menu_items():
+async def get_menu_items(skip: int = 0, limit: int = 100, search: str = None, category_id: int = None):
     async with get_db() as db:
         stmt = select(Menu)
+        if search:
+            stmt = stmt.where(Menu.name.ilike(f"%{search}%"))
+        if category_id:
+            stmt = stmt.where(Menu.category_id == category_id)
+        stmt = stmt.offset(skip).limit(limit)
         result = await db.execute(stmt)
-        return result.unique().scalars().all()
+        return result.scalars().unique().all()
 
 async def get_menu_item_by_id(menu_id: int):
     async with get_db() as db:

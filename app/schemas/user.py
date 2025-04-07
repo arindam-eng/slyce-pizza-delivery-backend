@@ -29,6 +29,7 @@ class UserInDB(UserBase):
     role: UserRole
     is_active: bool
     is_verified: bool
+    is_profile_complete: bool
     created_at: datetime
     updated_at: Optional[datetime] = None
     
@@ -42,6 +43,7 @@ class UserOut(BaseModel):
     mobile: str
     role: UserRole
     is_verified: bool
+    is_profile_complete: bool
     
     class Config:
         from_attributes = True
@@ -49,6 +51,7 @@ class UserOut(BaseModel):
 class TokenData(BaseModel):
     access_token: str
     refresh_token: str
+    user: UserOut
     token_type: str = "bearer"
 
 class OTPRequest(BaseModel):

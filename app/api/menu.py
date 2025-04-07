@@ -18,9 +18,7 @@ router = APIRouter(prefix="/menu", tags=["Menu"])
 async def get_all_categories():
     print("Fetching categories")
     categories = await get_categories()
-    if not categories:
-        raise HTTPException(status_code=404, detail="No categories found")
-    return categories
+    return categories or []
 
 @router.post("/", response_model=MenuOut, dependencies=[role_required(["customer"])])
 async def create_menu(menu_data: MenuCreate):
@@ -41,8 +39,11 @@ async def update_menu_status(menu_id: int, is_active: bool):
     return {"message": "Menu availability updated"}
 
 @router.get("/", response_model=list[MenuOut])
-async def read_menu_items():
-    return await get_menu_items()
+async def get_all_menu_items(
+    skip: int = 0, limit: int = 100, search: str = None, category_id: int = None
+):
+    menu_items = await get_menu_items(skip=skip, limit=limit, search=search, category_id=category_id)
+    return menu_items or []  # Return an empty list if no items are found
 
 @router.get("/{menu_id}", response_model=MenuOut)
 async def read_menu_item(menu_id: int):

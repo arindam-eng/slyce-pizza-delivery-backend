@@ -9,7 +9,7 @@ class UserRole(str, enum.Enum):
     ADMIN = "admin"
     CUSTOMER = "customer"
     RESTAURANT = "restaurant"
-    DELIVERY = "delivery"
+    DELIVERY_AGENT = "delivery_agent"
 
 class User(Base):
     __tablename__ = "users"
@@ -21,6 +21,7 @@ class User(Base):
     role = Column(Enum(UserRole), default=UserRole.CUSTOMER)
     is_active = Column(Boolean, default=True)
     is_verified = Column(Boolean, default=False)
+    is_profile_complete = Column(Boolean, default=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
     

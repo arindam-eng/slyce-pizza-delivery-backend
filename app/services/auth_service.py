@@ -42,7 +42,7 @@ async def send_otp(mobile: str):
             from_=settings.TWILIO_PHONE_NUMBER,
             to=mobile
         )
-        return {"message": "OTP sent successfully", "message_sid": message.sid}
+        return {"message": "OTP sent successfully", "message_sid": message.sid, otp: otp}
     except TwilioRestException as e:
         # In development/testing environment, return the OTP
         if settings.ENVIRONMENT == "development":
@@ -74,7 +74,8 @@ async def create_user(mobile: str):
         new_user = User(
             mobile=mobile,
             role=UserRole.CUSTOMER,
-            is_verified=True
+            is_verified=True,
+            is_profile_complete=False,
         )
         
         db.add(new_user)
@@ -88,24 +89,33 @@ async def create_user(mobile: str):
 
 async def update_user_profile(user_id: int, profile_data: UserProfile):
     """Update user profile information"""
-    async with get_db() as db:
+
+    async with get_db() as db:  # Ensures proper DB session management
         result = await db.execute(select(User).where(User.id == user_id))
         user = result.scalars().first()
-        
+
         if not user:
             raise HTTPException(status_code=404, detail="User not found")
-        
-        # Update user fields
-        for field, value in profile_data.dict(exclude_unset=True).items():
+
+        # Update only provided fields
+        updated_fields = profile_data.dict(exclude_unset=True)
+        for field, value in updated_fields.items():
             setattr(user, field, value)
-        
+
+        # Check if all required fields are filled
+        required_fields = UserProfile.__fields__.keys()
+        user.is_profile_complete = all(getattr(user, field) for field in required_fields)
+
+        user.updated_at = datetime.utcnow()
+        db.add(user)
+
         try:
             await db.commit()
             await db.refresh(user)
             return user
         except IntegrityError:
             await db.rollback()
-            raise HTTPException(status_code=400, detail="Update failed. Email might be already in use.")
+            raise HTTPException(status_code=400, detail="Update failed. Possible duplicate email.")
 
 async def get_user_by_id(user_id: int):
     """Get user by ID"""
